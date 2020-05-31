@@ -1,31 +1,25 @@
 import moment from 'moment'
 import { orders, users, companies } from '../data'
+import {
+	formatCurrency,
+	formatBirthday,
+	formatCardNumber,
+	sortBy
+} from './misc'
 
-const renderTableBody = () => {
-	return orders.map((order) => {
+const renderTableBody = (arr = []) => {
+	return arr.map((order) => {
 		const user = users.find((user) => user.id === order.user_id)
 
-		let company = 'Some cool company'
+		let company = 'www.google.com'
 		if (user.company_id)
 			company = companies.find(
 				(company) => company.id === user.company_id
 			)
-		else company = 'Cool company'
 
-		const formattedBirthday = moment
-			.unix(user.birthday)
-			.format('DD/MM/YYYY')
-
-		const formattedCurrency = new Intl.NumberFormat('en-US', {
-			maximumSignificantDigits: 3,
-			currency: 'USD',
-			style: 'currency'
-		}).format(order.total)
-
-		const formattedCardNumber =
-			order.card_number.slice(0, 2) +
-			'**********' +
-			order.card_number.slice(order.card_number.length - 4)
+		const formattedBirthday = formatBirthday(user.birthday)
+		const formattedCurrency = formatCurrency(order.total)
+		const formattedCardNumber = formatCardNumber(order.card_number)
 
 		return `
 			<tr>
@@ -54,22 +48,48 @@ const renderTableBody = () => {
 }
 
 export default (function() {
-	document.getElementById('app').innerHTML = `
+	let sortedOrders = [ ...orders ]
+
+	const renderTable = (orders = []) => `
 	<table class="table">
-    <thead>
+		<thead>
 			<tr>
 				<th scope="col">Transaction ID</th>
-				<th scope="col">User Info</th>
+				<th scope="col" id="userInfoHead" style="cursor: pointer;">User Info</th>
 				<th scope="col">Order Date</th>
 				<th scope="col">Order Amount</th>
 				<th scope="col">Card Number</th>
 				<th scope="col">Card Type</th>
-				<th scope="col">Location</th>
+				<th scope="col" id="locationHead" style="cursor: pointer;">Location</th>
 			</tr>
 		</thead>
 		<tbody>
-			${renderTableBody()}
+			${renderTableBody(orders)}
 		</tbody>
 	</table>
-	`
+`
+
+	// ${renderTable(newOrders)}
+	const updateUI = (newOrders = []) =>
+		(document.getElementById('app').innerHTML = `
+			<div>
+				
+				<h1>Hello World</h1>
+			</div>
+		`)
+
+	updateUI(sortedOrders)
+
+	// Sorting
+	const userInfoHead = document.querySelector('#userInfoHead')
+	userInfoHead.addEventListener('click', () => {
+		sortedOrders = sortBy('userInfo', sortedOrders)
+		updateUI(sortedOrders)
+	})
+
+	const locationHead = document.querySelector('#locationHead')
+	locationHead.addEventListener('click', () => {
+		sortedOrders = sortBy('location', sortedOrders)
+		updateUI(sortedOrders)
+	})
 })()
